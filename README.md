@@ -8,37 +8,37 @@
 
 1. Download/clone this repository to a local folder.
 2. Keep your current QA V2 folder unchanged at:
-   \`D:\Czech800\Czech800_QA_STUDIO_V2_CHROME_EDITOR\Czech800_QA_STUDIO_V2\`
+   `D:\Czech800\Czech800_QA_STUDIO_V2_CHROME_EDITOR\Czech800_QA_STUDIO_V2`
 3. Double-click **START_BYBE.bat**. The existing V2 should open at <http://127.0.0.1:8765/>.
 4. To check that your manually edited WAV files are actually present:
 
-   \`\`\`bat
+   ```bat
    py -3.11 scripts\bybe.py status
-   \`\`\`
+   ```
 
 5. To make a **single validated backup ZIP** containing *both QA JSON and all actual edited WAVs*:
 
-   \`\`\`bat
+   ```bat
    py -3.11 scripts\bybe.py backup
-   \`\`\`
+   ```
 
-   Output: \`local_data/backups/BYBE_CZECH800_QA_*.zip\` (not in Git).
+   Output: `local_data/backups/BYBE_CZECH800_QA_*.zip` (not in Git).
 
-If V2 is stored elsewhere, create \`local-config.json\` next to this README:
+If V2 is stored elsewhere, create `local-config.json` next to this README:
 
-\`\`\`json
+```json
 {"legacy_workspace": "D:\\Czech800\\Czech800_QA_STUDIO_V2_CHROME_EDITOR\\Czech800_QA_STUDIO_V2"}
-\`\`\`
+```
 
 ## Register original source videos without copying them
 
-\`\`\`bat
+```bat
 py -3.11 scripts\bybe.py link-source --part 003 --file "D:\Czech800\raw\YOUR_003.mkv"
 py -3.11 scripts\bybe.py link-source --part 004 --file "D:\Czech800\raw\YOUR_004.mkv"
 py -3.11 scripts\bybe.py link-source --part 005 --file "D:\Czech800\raw\YOUR_005.mkv"
-\`\`\`
+```
 
-Replace YOUR_003.mkv with your *actual* filenames. The tool validates file presence and saves its SHA-256 to \`local_data/source_map.json\`. It does not modify source media.
+Replace YOUR_003.mkv with your *actual* filenames. The tool validates file presence and saves its SHA-256 to `local_data/source_map.json`. It does not modify source media.
 
 ## Architecture / roadmap
 
@@ -48,13 +48,13 @@ Replace YOUR_003.mkv with your *actual* filenames. The tool validates file prese
 - [Open source dependencies and licensing](docs/OPEN_SOURCE.md)
 - [Current project map](docs/PROJECT_MAP.md)
 
-**Public repository:** Never commit MKV/MP4/WAV/MP3 recordings, personal QA exports, Drive credentials, API keys, \`edits/\`, \`local_data/\`, or source paths. This code works offline; Codex tokens are not required for basic editing or backups. No automatic Google Drive sync is claimed.
+**Public repository:** Never commit MKV/MP4/WAV/MP3 recordings, personal QA exports, Drive credentials, API keys, `edits/`, `local_data/`, or source paths. This code works offline; Codex tokens are not required for basic editing or backups. No automatic Google Drive sync is claimed.
 
 ## Tests
 
-\`\`\`bat
+```bat
 py -3.11 -m unittest discover -s tests -v
-\`\`\`
+```
 
 ## License
 
