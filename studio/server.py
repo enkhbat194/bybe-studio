@@ -151,6 +151,15 @@ def make_backup():
         if REV_DIR.exists():
             paths += [(p, "v3/revisions/" + p.relative_to(REV_DIR).as_posix())
                       for p in REV_DIR.rglob("*.wav") if p.is_file()]
+        imported = DATA / "imports"
+        if imported.exists():
+            paths += [(p, "v3/imports/" + p.relative_to(imported).as_posix())
+                      for p in imported.rglob("*") if p.is_file() and
+                      (p.suffix == ".wav" or p.suffix == ".json") and not p.is_symlink()]
+        if bybe.SOURCE_MAP.exists():
+            paths.append((bybe.SOURCE_MAP, "v3/source_map.json"))
+        if bybe.CONFIG.exists():
+            paths.append((bybe.CONFIG, "v3/local-config.json"))
         directory = DATA / "backups"
         directory.mkdir(parents=True, exist_ok=True)
         stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
