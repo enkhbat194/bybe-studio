@@ -23,7 +23,7 @@
 
 ## Planned stages (NOT implemented yet)
 
-- V3: versioned SQLite project DB, local Source Manager, FFmpeg context extraction, waveform with prefilled draggable absolute boundaries, nondestructive WAV output.
+- V3 pilot: local JSON revision index, FFmpeg context extraction, waveform with prefilled draggable absolute boundaries, nondestructive WAV output (implemented). Next: replace pilot JSON revision index with transactional SQLite, improve file restore and source manager UI.
 - V4: OCR + Czech/English ASR via independent Whisper and Qwen3 signals, role classifier, contextual speech-end QA and user review queue.
 - V5: optional local MCP adapter for Codex and other agents with read-only default; authorized candidate creation and gated QA approval.
 - Optional: Drive for desktop sync folder backup; API upload only with explicit connection and user authorization.
