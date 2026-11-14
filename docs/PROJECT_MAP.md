@@ -1,11 +1,14 @@
 # PROJECT MAP — BYBE Studio
 
 Repository: enkhbat194/bybe-studio (public)
-Stage: bootstrap v0.1
+Stage: bootstrap v0.2 + isolated V3 pilot
 Design: GitHub source code + Windows-local runtime/workspace + optional MCP and cloud backup.
 
 ## Current code
-- scripts/bybe.py — verifies V2 QA state and real edited WAV references, creates complete local QA backups, registers source MKV/MP4 by hash, launches V2.
+- scripts/bybe.py — verifies V2 QA state and actual edited WAV references, creates complete local QA backups, registers source media by hash, launches V2.
+- studio/server.py — isolated localhost 8766 source-linked wave extraction and append-only candidate WAV revisions, 6-point confirmation and combined backup.
+- studio/index.html — independent offline waveform editor, draggable boundaries and playback.
+- START_BYBE_V3_PILOT.bat — pilot entry point (does not replace V2).
 - START_BYBE.bat — double-click Windows entry point.
 - .gitignore — prevents locally generated data, media and QA records from going into Git.
 - docs/* — architecture, usage and safe integration scope.
@@ -21,7 +24,7 @@ Design: GitHub source code + Windows-local runtime/workspace + optional MCP and 
 - 004/005 edge: #122 květina needs manual source-linked reconstruction.
 
 ## Next exact milestone (not complete yet)
-Implement the V3 local SQLite + FFmpeg + waveform Source Manager without replacing existing V2. Use #61 knír, #63 DVD přehrávač, #94 zlatá as end-to-end non-destructive acceptance tests.
+Run the isolated V3 pilot on real #61 knír, #63 DVD přehrávač, #94 zlatá media. Fix any pilot defects; then migrate JSON revision storage to SQLite and create a source linking GUI. Do not switch production from V2 until user confirms all three round-trip tests.
 
 ## Acceptance criteria
 1. User selects clip; source video auto-resolves to a verified absolute time interval.
