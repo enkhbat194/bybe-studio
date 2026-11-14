@@ -81,10 +81,12 @@ def import_004(archive_path: Path):
                             "id": item_id, "set": "004", "wordNo": word_no,
                             "word": word, "role": role, "src": relative,
                             "storage": "bybe", "status": "pending",
-                            "reference": word if role.startswith("word") else "",
+                            "reference": word if role.startswith("word") else str(metadata.get("czech_sentence") or "").strip(),
+                            "english_reference": str((metadata.get("english_word") if role.startswith("word") else metadata.get("english_sentence")) or "").strip(),
+                            "source_screen_sec": metadata.get("reference_screen_sec"),
                             "textVerified": False, "qa": "REVIEW_REQUIRED",
                             "timing": json.dumps([[4, start, end]]),
-                            "source_evidence": "part004 data.json; not independently verified",
+                            "source_evidence": str(metadata.get("analysis_method") or "part004 data.json; not independently verified"),
                             "sha256": hashlib.sha256(raw).hexdigest()
                         })
                 if found != set(range(95, 122)) or len(rows) != 108:
