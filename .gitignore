@@ -147,3 +147,31 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# BYBE local recordings / QA output (never commit to public repo)
+local_data/
+local-config.json
+source_map.json
+qa_records.json
+qa_state_server.json
+edits/
+backups/
+_history/
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
+*.mkv
+*.mp4
+*.mov
+*.avi
+*.srt
+*.csv
+*.zip
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+__pycache__/
+*.pyc
