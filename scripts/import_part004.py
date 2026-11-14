@@ -82,7 +82,7 @@ def import_004(archive_path: Path):
                             "word": word, "role": role, "src": relative,
                             "storage": "bybe", "status": "pending",
                             "reference": word if role.startswith("word") else str(metadata.get("czech_sentence") or "").strip(),
-                            "english_reference": str(metadata.get("english_word") if role.startswith("word") else metadata.get("english_sentence") or ""),
+                            "english_reference": str((metadata.get("english_word") if role.startswith("word") else metadata.get("english_sentence")) or "").strip(),
                             "source_screen_sec": metadata.get("reference_screen_sec"),
                             "textVerified": False, "qa": "REVIEW_REQUIRED",
                             "timing": json.dumps([[4, start, end]]),
