@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BYBE Studio — Source Audio QA</title>
+<style>
+:root{color-scheme:dark;font:14px/1.5 system-ui,Segoe UI,Arial,sans-serif;background:#090e17;color:#e5efff}
+*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}
+header{padding:16px 22px;border-bottom:1px solid #293d57;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+h1{font-size:21px;margin:0}small,.muted{color:#9aafca}
+header p{margin:2px 0}.wrap{max-width:1500px;margin:auto;padding:18px}
+main{display:grid;grid-template-columns:300px 1fr;gap:14px}
+.box{background:#121d2c;border:1px solid #30455f;border-radius:13px;padding:16px}
+button,.button{background:#22354b;color:#e5efff;border:1px solid #416280;border-radius:8px;padding:9px 12px;text-decoration:none;display:inline-block}
+button:hover{background:#304c6b}button:disabled{opacity:.4;cursor:not-allowed}
+.primary{background:#2356c5;border-color:#4b80fa}.good{background:#155344;border-color:#299a76}
+input[type=text],input[type=number],input[type=search]{background:#091421;border:1px solid #45607b;color:#e5efff;border-radius:7px;padding:9px;width:100%}
+#list{height:65vh;overflow:auto;margin-top:10px}
+.item{display:block;width:100%;text-align:left;margin:4px 0;padding:9px 10px;font-size:13px}
+.item.active{background:#1c4978;border-color:#68a2fd}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:10px 0}.row>*{min-width:0}
+#canvas{width:100%;height:200px;display:block;background:#081d2f;touch-action:none;border:1px solid #3e6882;border-radius:8px;cursor:ew-resize}
+.fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+label{display:block;font-size:12px;color:#b6cbe4}
+label input{margin-top:4px}
+audio{width:100%;margin:8px 0}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.checks label{border:1px solid #2d465f;border-radius:7px;padding:8px;font-size:13px}
+.info{background:#253322;border:1px solid #62682f;color:#f4e7a4;border-radius:9px;padding:12px;margin:12px 0}
+.error{background:#4b1c28;color:#ffbdc1;border-radius:8px;padding:10px}
+#status{white-space:pre-wrap}
+@media(max-width:850px){main{grid-template-columns:1fr}#list{height:250px}.checks{grid-template-columns:1fr 1fr}.fields{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header>
+<div><h1>BYBE Studio <small>V3 PILOT</small></h1>
+<p class="muted">Эх бичлэгээс таслах · Долгионоор засах · Давхар шалгах · Эх файлыг өөрчлөхгүй</p></div>
+<div><a class="button" href="/api/backup">QA + засварын WAV — нэг ZIP татах</a></div>
+</header>
+<div class="wrap">
+<div class="info"><b>ЧУХАЛ:</b> Энэ бол V2-оос тусдаа туршилтын редактор (порт 8766). Эх видео, V2-ийн засварууд өөрчлөгдөхгүй. Шинэ WAV хадгалбал эхлэл, төгсгөл, бүтэн дуудлагыг дахин сонссоны дараа л баталгаажуулна. Source Part 003/004/005 холбогдоогүй бол эхэлж локал бүртгэл хий.</div>
+<main>
+<aside class="box">
+<input id="search" type="search" placeholder="Үг, дугаар, аудио төрөл хайх">
+<p id="count" class="muted"></p><div id="list"></div>
+</aside>
+<section class="box">
+<div id="summary"><h2>Аудио сонго</h2></div>
+<div id="controls" style="display:none">
+<h3>Одоогийн V2 WAV/MP3</h3>
+<audio id="original" controls preload="none"></audio>
+<div class="row"><button id="load" class="primary">Эх видеоны контекстийг ачаалах</button><label>Нэмэлт зай <input id="pad" type="number" min=".5" max="5" step=".5" value="3" style="width:75px"> сек</label></div>
+<canvas id="canvas"></canvas>
+<div class="fields">
+<label>Эхлэх (эх видеоны секунд)<input id="start" type="number" step=".001"></label>
+<label>Дуусах (эх видеоны секунд)<input id="end" type="number" step=".001"></label>
+<label>Сонгосон хугацаа<input id="duration" type="text" readonly></label>
+</div>
+<div class="row">
+<button id="listen" disabled>▶ Сонгосон хэсгийг сонсох</button>
+<button id="stop">■ Зогсоох</button>
+<button id="save" class="primary" disabled>Шинэ WAV кандидат хадгалах</button>
+</div>
+<p id="status" class="muted"></p>
+<h3>Шинээр хадгалсан WAV</h3>
+<audio id="revised" controls preload="none"></audio>
+<p class="muted">Эхлээд засварласан аудиогоо бүхэлд нь сонсоод дараах 6 шалгалтыг тус тусад нь батална.</p>
+<div class="checks" id="checks">
+<label><input type="checkbox" data-c="start_heard"> Эхний авиа бүтэн</label>
+<label><input type="checkbox" data-c="end_heard"> Сүүлийн авиа бүтэн</label>
+<label><input type="checkbox" data-c="whole_heard"> Бүтэн дуудлагыг сонссон</label>
+<label><input type="checkbox" data-c="language_correct"> Чех хэл зөв</label>
+<label><input type="checkbox" data-c="text_correct"> Үг/өгүүлбэр зөв</label>
+<label><input type="checkbox" data-c="role_correct"> Энгийн/удаан төрөл зөв</label>
+</div>
+<div class="row"><button id="verify" class="good" disabled>✓ 6 шалгалтыг батлах</button><span id="verified"></span></div>
+</div>
+</section></main>
+</div>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const values = { rows:[], row:null, audio:null, base:0, start:0, end:0, source:null, rev:null, playing:null, drawing:false };
+const safe = x => String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const role = x=>({word_normal:"Үг — энгийн",word_slow:"Үг — удаан",sentence_normal:"Өгүүлбэр — энгийн",sentence_slow:"Өгүүлбэр — удаан"})[x]||x;
+async function json(url,init){const res=await fetch(url,init);let obj=await res.json();if(!res.ok)throw Error(obj.error||"Server error");return obj}
+const post=(path,data)=>json(path,{method:"POST",headers:{"Content-Type":"application/json","X-BYBE-Local":"1"},body:JSON.stringify(data)});
+function say(msg,isErr=false){$("status").textContent=msg;$("status").className=isErr?"error":"muted";}
+async function initialize(){
+try{const d=await json("/api/records");values.rows=d.records;renderList();$("count").textContent=d.records.length+" аудио бүртгэл";}
+catch(e){$("summary").innerHTML="<div class='error'>"+safe(e.message)+"</div>";}
+}
+function renderList(){
+const query=$("search").value.trim().toLowerCase();
+const items=values.rows.filter(x=>(x.word+" "+x.id+" "+x.role).toLowerCase().includes(query));
+$("count").textContent=items.length+" / "+values.rows.length+" аудио";
+$("list").innerHTML=items.map(x=>'<button class="item '+(values.row?.id===x.id?"active":"")+'" data-id="'+safe(x.id)+'"><b>'+safe(x.word)+'</b> · '+safe(role(x.role))+'<br><small>'+safe(x.id)+' · '+(x.source_linked?"Source холбогдсон":"Source байхгүй")+' · '+safe(x.v3_status)+'</small></button>').join("");
+$("list").querySelectorAll("[data-id]").forEach(btn=>btn.addEventListener("click",()=>select(btn.dataset.id)));
+}
+async function select(id){
+stop();values.row=values.rows.find(x=>x.id===id);values.audio=null;values.rev=null;values.source=null;
+$("controls").style.display="block";
+$("summary").innerHTML="<h2>"+safe(values.row.word)+" — "+safe(role(values.row.role))+"</h2><p class='muted'>"+safe(values.row.id)+" · "+safe(values.row.part||"source unknown")+" · "+safe(values.row.expected)+" · V2 QA: "+safe(values.row.legacy_status)+"</p>";
+$("original").src="/api/legacy-audio?id="+encodeURIComponent(id);$("revised").removeAttribute("src");$("revised").load();
+$("save").disabled=true;$("listen").disabled=true;$("verify").disabled=true;$("verified").textContent="";
+$("checks").querySelectorAll("input").forEach(x=>x.checked=false);
+$("start").value=values.row.start??"";$("end").value=values.row.end??"";
+$("duration").value=(values.row.end-values.row.start).toFixed(3);
+$("load").disabled=!values.row.source_linked;
+say(values.row.source_linked?"Эх видеоны контекстийг ачаална уу.":"Source Media Manager: энэ хэсгийн эх файл холбогдоогүй. README-ийн link-source командыг ашигла.");
+draw();renderList();
+}
+function stop(){if(values.playing){try{values.playing.stop()}catch(e){}values.playing=null}}
+function draw(){
+const canvas=$("canvas"), rect=canvas.getBoundingClientRect(), w=Math.max(300,Math.round(rect.width)),h=200;
+canvas.width=w*devicePixelRatio;canvas.height=h*devicePixelRatio;
+const ctx=canvas.getContext("2d");ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ctx.clearRect(0,0,w,h);ctx.fillStyle="#0c2336";ctx.fillRect(0,0,w,h);
+if(!values.audio)return;
+const samples=values.audio.getChannelData(0), duration=values.audio.duration;
+const left=Math.max(0,Math.min(w,(values.start-values.base)/duration*w));
+const right=Math.max(0,Math.min(w,(values.end-values.base)/duration*w));
+ctx.fillStyle="#164b4e";ctx.fillRect(left,0,Math.max(0,right-left),h);
+ctx.strokeStyle="#62c5e4";ctx.lineWidth=1.4;
+for(let x=0;x<w;x+=2){let a=Math.floor(x/w*samples.length),b=Math.min(samples.length,Math.floor((x+2)/w*samples.length)),max=0;
+for(let i=a;i<b;i++)max=Math.max(max,Math.abs(samples[i]));const y=Math.min(88,max*85);
+ctx.beginPath();ctx.moveTo(x,100-y);ctx.lineTo(x,100+y);ctx.stroke();}
+ctx.strokeStyle="#57dfb4";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(left,0);ctx.lineTo(left,h);ctx.stroke();
+ctx.strokeStyle="#ffc26f";ctx.beginPath();ctx.moveTo(right,0);ctx.lineTo(right,h);ctx.stroke();
+ctx.fillStyle="#b7cde4";ctx.font="12px system-ui";ctx.fillText(values.base.toFixed(3)+"s",8,h-9);
+ctx.textAlign="right";ctx.fillText((values.base+duration).toFixed(3)+"s",w-8,h-9);ctx.textAlign="left";
+}
+function adjust(which,absolute){
+if(!values.audio)return;
+const min=values.base,max=values.base+values.audio.duration;
+if(which==="start")values.start=Math.min(values.end-.015,Math.max(min,absolute));
+else values.end=Math.max(values.start+.015,Math.min(max,absolute));
+$("start").value=values.start.toFixed(3);$("end").value=values.end.toFixed(3);
+$("duration").value=(values.end-values.start).toFixed(3)+" секунд";draw();
+}
+async function loadContext(){
+try{
+say("Эх бичлэгээс контекст татаж байна...");
+const id=encodeURIComponent(values.row.id), p=encodeURIComponent($("pad").value);
+const response=await fetch("/api/context?id="+id+"&pad="+p);
+if(!response.ok){let e=await response.json();throw Error(e.error||"Source error")}
+const data=await response.arrayBuffer();
+const ctx=new(window.AudioContext||window.webkitAudioContext)();
+values.audio=await ctx.decodeAudioData(data);values.playCtx=ctx;
+values.base=Number(response.headers.get("X-BYBE-Base"));
+values.start=Number(response.headers.get("X-BYBE-Start"));
+values.end=Number(response.headers.get("X-BYBE-End"));
+$("listen").disabled=false;$("save").disabled=false;
+adjust("start",values.start);adjust("end",values.end);
+say("Анхны зааг автоматаар байрласан. Ногоон эхлэл, улбар шар төгсгөлийг чирнэ.");
+}catch(e){say(e.message,true)}
+}
+function listen(){
+stop();if(!values.audio)return;
+const src=values.playCtx.createBufferSource();src.buffer=values.audio;src.connect(values.playCtx.destination);
+const offset=Math.max(0,values.start-values.base),length=Math.max(.01,values.end-values.start);
+src.start(0,offset,length);values.playing=src;src.onended=()=>{if(values.playing===src)values.playing=null};
+}
+async function save(){
+try{
+if(!values.audio)throw Error("Source context not loaded");
+const obj=await post("/api/candidate",{id:values.row.id,start:values.start,end:values.end});
+values.rev=obj.rev;$("revised").src="/api/revision?id="+encodeURIComponent(values.row.id)+"&rev="+encodeURIComponent(obj.rev);
+$("revised").load();$("verify").disabled=false;$("checks").querySelectorAll("input").forEach(x=>x.checked=false);
+say("Шинэ WAV хадгалагдсан. Одоо төгсгөл хүртэл сонсож 6 шалгалтыг батал.");
+}catch(e){say(e.message,true)}
+}
+async function verify(){
+try{
+const checks={};$("checks").querySelectorAll("input").forEach(x=>checks[x.dataset.c]=x.checked);
+const response=await post("/api/verify",{id:values.row.id,rev:values.rev,checks});
+$("verified").textContent="Батлагдсан: "+response.status;say("Агуулгын 6 шалгалтыг хэрэглэгч баталлаа.");
+values.row.v3_status=response.status;renderList();
+}catch(e){say(e.message,true)}
+}
+$("canvas").addEventListener("pointerdown",event=>{
+if(!values.audio)return;
+const rect=$("canvas").getBoundingClientRect();
+const fraction=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
+const x=values.base+fraction*values.audio.duration;
+values.drag=Math.abs(x-values.start)<=Math.abs(x-values.end)?"start":"end";
+$("canvas").setPointerCapture(event.pointerId);adjust(values.drag,x);
+});
+$("canvas").addEventListener("pointermove",event=>{
+if(!values.drag||!values.audio)return;
+const rect=$("canvas").getBoundingClientRect();
+const fraction=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
+adjust(values.drag,values.base+fraction*values.audio.duration);
+});
+["pointerup","pointercancel"].forEach(ev=>$("canvas").addEventListener(ev,()=>values.drag=null));
+$("start").addEventListener("change",()=>adjust("start",Number($("start").value)));
+$("end").addEventListener("change",()=>adjust("end",Number($("end").value)));
+$("search").addEventListener("input",renderList);
+$("load").addEventListener("click",loadContext);$("listen").addEventListener("click",listen);
+$("stop").addEventListener("click",stop);$("save").addEventListener("click",save);
+$("verify").addEventListener("click",verify);
+window.addEventListener("resize",draw);initialize();
+</script>
+</body></html>
