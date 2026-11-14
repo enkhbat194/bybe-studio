@@ -2,7 +2,7 @@
 
 **Local-first, non-destructive audio/video QA workstation.** Windows + Chrome + Python 3.11. Intended for Czech800: four audio roles per Czech word (normal word, slow/syllabic word, normal example sentence, slow/syllabic example sentence).
 
-> **Status: bootstrap v0.1.** This repository currently contains a working **launcher, backup/diagnostics and source registry bridge for existing Czech800 QA Studio V2**. It does NOT yet include the V2 web editor's code, media files, integrated Source Manager UI, OCR/ASR, or a working MCP server. These are the next implementation phases. No claims of finished automated audio QA.
+> **Status: BYBE bootstrap v0.2 + V3 isolated pilot.** Current repo includes the V2 launcher/backup bridge and a separate source-linked waveform editor pilot. V3 runs on 127.0.0.1:8766 and creates immutable WAV candidates; it does not overwrite V2. No claim of completed content QA, OCR/ASR, MCP or Drive uploads.
 
 ## Windows quick start
 
@@ -30,6 +30,18 @@ If V2 is stored elsewhere, create `local-config.json` next to this README:
 {"legacy_workspace": "D:\\Czech800\\Czech800_QA_STUDIO_V2_CHROME_EDITOR\\Czech800_QA_STUDIO_V2"}
 ```
 
+## V3 waveform editor pilot (separate from V2)
+
+Once your V2 workspace exists and you have registered the matching source videos using the commands below, double-click **START_BYBE_V3_PILOT.bat** or run:
+
+```bat
+py -3.11 studio\server.py
+```
+
+Open <http://127.0.0.1:8766/>. This pilot reads the old V2 manifest and QA state, displays original WAV, retrieves a short context from the linked MKV via **FFmpeg**, preloads start/end boundaries, lets you drag both edges, saves an immutable WAV candidate under `local_data/revisions/`, and requires six explicit human checks for approval. It does **not** rewrite the old WAV or V2 QA state.
+
+**Requires FFmpeg/ffprobe available on Windows PATH** for source extraction. A missing or cross-part source is shown as an error rather than silently guessing.
+
 ## Register original source videos without copying them
 
 ```bat
@@ -38,7 +50,7 @@ py -3.11 scripts\bybe.py link-source --part 004 --file "D:\Czech800\raw\YOUR_004
 py -3.11 scripts\bybe.py link-source --part 005 --file "D:\Czech800\raw\YOUR_005.mkv"
 ```
 
-Replace YOUR_003.mkv with your *actual* filenames. The tool validates file presence and saves its SHA-256 to `local_data/source_map.json`. It does not modify source media.
+Replace YOUR_003.mkv with your *actual* filenames. The tool validates file presence and saves its SHA-256 to `local_data/source_map.json`. It does not modify source media. Do not assume the source chunk can be inferred from the manifest's video_num field.
 
 ## Architecture / roadmap
 
@@ -48,7 +60,7 @@ Replace YOUR_003.mkv with your *actual* filenames. The tool validates file prese
 - [Open source dependencies and licensing](docs/OPEN_SOURCE.md)
 - [Current project map](docs/PROJECT_MAP.md)
 
-**Public repository:** Never commit MKV/MP4/WAV/MP3 recordings, personal QA exports, Drive credentials, API keys, `edits/`, `local_data/`, or source paths. This code works offline; Codex tokens are not required for basic editing or backups. No automatic Google Drive sync is claimed.
+**Public repository:** Never commit MKV/MP4/WAV/MP3 recordings, personal QA exports, Drive credentials, API keys, `edits/`, `local_data/`, or source paths. This code works offline; Codex tokens are not required for basic editing or backups. No automatic Google Drive sync or MCP is claimed. The public repo contains no private media.
 
 ## Tests
 
