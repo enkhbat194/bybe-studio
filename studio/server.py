@@ -311,6 +311,26 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 idx = get_index()
                 info = idx["clips"].setdefault(id, {"active": None, "status": "UNREVIEWED", "revisions": []})
+                if path == "/api/verify-original":
+                    checks = data.get("checks", {})
+                    if not isinstance(checks, dict) or not all(checks.get(k) is True for k in CHECKS):
+                        raise ValueError("Эхлэл, төгсгөл, бүтэн яриа, хэл, текст, төрлийг бүгдийг сонсож батална")
+                    root = DATA if row.get("storage") == "bybe" else bybe.workspace()
+                    legacy = legacy_state().get(id, {})
+                    rel = legacy.get("edited") if legacy.get("choice") == "edited" else row.get("src")
+                    if not rel:
+                        raise ValueError("Original audio path missing")
+                    file = (root / rel).resolve()
+                    if not file.is_relative_to(root.resolve()) or not file.is_file():
+                        raise ValueError("Selected audio not found; cannot verify a missing WAV")
+                    info["original_verified"] = {
+                        "sha256": bybe.sha256(file), "checks": checks,
+                        "verified_at": dt.datetime.now(dt.timezone.utc).isoformat()
+                    }
+                    info["active"] = None
+                    info["status"] = "MANUALLY_VERIFIED_ORIGINAL"
+                    save_index(idx)
+                    return self.out({"ok": True, "status": info["status"]})
                 if path == "/api/candidate":
                     src, part, begin, end = source_for(row)
                     start = float(data["start"])
