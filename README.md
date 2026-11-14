@@ -52,6 +52,16 @@ py -3.11 scripts\bybe.py link-source --part 005 --file "D:\Czech800\raw\YOUR_005
 
 Replace YOUR_003.mkv with your *actual* filenames. The tool validates file presence and saves its SHA-256 to `local_data/source_map.json`. It does not modify source media. Do not assume the source chunk can be inferred from the manifest's video_num field.
 
+## Import existing PART004 without repeating work
+
+The previous 004/95–121 bundle has 27 words × 4 WAV files. Once the ZIP is available on your Windows PC:
+
+```bat
+py -3.11 scripts\import_part004.py --zip "D:\Czech800\YOUR_PART004_108_WAV.zip"
+```
+
+The importer verifies 27 metadata records, all 108 PCM16 WAVs and absolute PART004 timestamps, then stores files in `local_data/imports/` (ignored by Git). The V3 pilot includes these records automatically at the next refresh. **004 clips remain REVIEW_REQUIRED** until listening QA. The original ZIP and V2 project are never overwritten.
+
 ## Architecture / roadmap
 
 - [Architecture and safeguards](docs/ARCHITECTURE.md)
