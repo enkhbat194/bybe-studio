@@ -16,5 +16,5 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Python compile and CLI help
         run: |
-          python -m py_compile scripts/bybe.py
+          python -m py_compile scripts/bybe.py studio/server.py
           python scripts/bybe.py --help
