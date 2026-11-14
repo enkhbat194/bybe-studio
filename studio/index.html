@@ -74,7 +74,7 @@ audio{width:100%;margin:8px 0}
 <label><input type="checkbox" data-c="text_correct"> Үг/өгүүлбэр зөв</label>
 <label><input type="checkbox" data-c="role_correct"> Энгийн/удаан төрөл зөв</label>
 </div>
-<div class="row"><button id="verify" class="good" disabled>✓ 6 шалгалтыг батлах</button><span id="verified"></span></div>
+<div class="row"><button id="verifyOriginal" class="good">✓ Одоогийн WAV-г батлах (таслахгүй)</button><button id="verify" class="good" disabled>✓ Шинэ WAV-г батлах</button><span id="verified"></span></div>
 </div>
 </section></main>
 </div>
@@ -171,6 +171,15 @@ $("revised").load();$("verify").disabled=false;$("checks").querySelectorAll("inp
 say("Шинэ WAV хадгалагдсан. Одоо төгсгөл хүртэл сонсож 6 шалгалтыг батал.");
 }catch(e){say(e.message,true)}
 }
+async function verifyOriginal(){
+try{
+const checks={};$("checks").querySelectorAll("input").forEach(x=>checks[x.dataset.c]=x.checked);
+const result=await post("/api/verify-original",{id:values.row.id,checks});
+values.row.v3_status=result.status;
+$("verified").textContent="Одоогийн WAV батлагдсан";
+say("Одоогийн WAV-ийн 6 шалгалтыг баталсан. Файл өөрчлөгдөөгүй.");renderList();
+}catch(e){say(e.message,true)}
+}
 async function verify(){
 try{
 const checks={};$("checks").querySelectorAll("input").forEach(x=>checks[x.dataset.c]=x.checked);
@@ -199,7 +208,7 @@ $("end").addEventListener("change",()=>adjust("end",Number($("end").value)));
 $("search").addEventListener("input",renderList);
 $("load").addEventListener("click",loadContext);$("listen").addEventListener("click",listen);
 $("stop").addEventListener("click",stop);$("save").addEventListener("click",save);
-$("verify").addEventListener("click",verify);
+$("verify").addEventListener("click",verify);$("verifyOriginal").addEventListener("click",verifyOriginal);
 window.addEventListener("resize",draw);initialize();
 </script>
 </body></html>
