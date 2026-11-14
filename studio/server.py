@@ -42,7 +42,17 @@ CHECKS = ("start_heard", "end_heard", "whole_heard",
 def records():
     folder = bybe.workspace()
     payload = bybe.read_json(folder / "qa_records.json")
-    return {r["id"]: r for r in payload.get("records", []) if VALID_ID.fullmatch(r["id"])}
+    result = {r["id"]: r for r in payload.get("records", []) if VALID_ID.fullmatch(r["id"])}
+    active_file = DATA / "imports" / "active.json"
+    if active_file.is_file():
+        pointer = bybe.read_json(active_file).get("004")
+        if isinstance(pointer, str) and re.fullmatch(r"part004_[a-f0-9]{12}", pointer):
+            imported = DATA / "imports" / pointer / "records.json"
+            if imported.is_file():
+                for row in bybe.read_json(imported).get("records", []):
+                    if VALID_ID.fullmatch(row.get("id", "")) and row["id"] not in result:
+                        result[row["id"]] = row
+    return result
 
 
 def legacy_state():
@@ -230,9 +240,10 @@ class Handler(BaseHTTPRequestHandler):
                 row = records().get(id)
                 if not row:
                     return self.out({"error": "Unknown clip ID"}, 404)
-                root = bybe.workspace()
+                root = DATA if row.get("storage") == "bybe" else bybe.workspace()
                 state = legacy_state().get(id, {})
-                relative = state.get("edited") if state.get("choice") == "edited" else row.get("src")
+                relative = (state.get("edited") if state.get("choice") == "edited"
+                            else row.get("src"))
                 if not relative:
                     return self.out({"error": "Audio missing"}, 404)
                 loc = (root / relative).resolve()
